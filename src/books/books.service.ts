@@ -9,6 +9,19 @@ import { Book } from './entities/book.entity';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
 import { QueryBookDto, SortField, SortDirection } from './dto/query-book.dto';
+import { Genre } from './enums/genre.enum';
+import { Author } from './enums/author.enum';
+import { Publisher } from './enums/publisher.enum';
+import {
+  CMPC_GENRE_DESCRIPTIONS,
+  CMPC_SPECIFIC_GENRES,
+  TRADITIONAL_GENRES,
+} from './constants/cmpc-genres';
+import {
+  CMPC_AUTHOR_DESCRIPTIONS,
+  CMPC_SPECIFIC_AUTHORS,
+  TRADITIONAL_AUTHORS,
+} from './constants/cmpc-authors';
 
 export interface BookListResponse {
   books: Book[];
@@ -164,34 +177,49 @@ export class BooksService {
     }
   }
 
-  async getGenres(): Promise<string[]> {
-    try {
-      const genres = await this.bookRepository
-        .createQueryBuilder('book')
-        .select('DISTINCT book.genre', 'genre')
-        .where('book.deletedAt IS NULL')
-        .getRawMany();
-
-      const genreList = genres.map((g) => g.genre);
-      return genreList;
-    } catch {
-      throw new BadRequestException('Error getting genres');
-    }
+  getGenres(): string[] {
+    // Retornar todos los valores del enum de géneros
+    return Object.values(Genre);
   }
 
-  async getPublishers(): Promise<string[]> {
-    try {
-      const publishers = await this.bookRepository
-        .createQueryBuilder('book')
-        .select('DISTINCT book.publisher', 'publisher')
-        .where('book.deletedAt IS NULL')
-        .getRawMany();
+  getCmpcSpecificGenres(): string[] {
+    // Retornar solo los géneros específicos de CMPC
+    return CMPC_SPECIFIC_GENRES;
+  }
 
-      const publisherList = publishers.map((p) => p.publisher);
-      return publisherList;
-    } catch {
-      throw new BadRequestException('Error getting publishers');
-    }
+  getTraditionalGenres(): string[] {
+    // Retornar solo los géneros tradicionales
+    return TRADITIONAL_GENRES;
+  }
+
+  getGenreDescriptions() {
+    // Retornar géneros con sus descripciones
+    return CMPC_GENRE_DESCRIPTIONS;
+  }
+
+  getAuthors(): string[] {
+    // Retornar todos los valores del enum de autores
+    return Object.values(Author);
+  }
+
+  getCmpcSpecificAuthors(): string[] {
+    // Retornar solo los autores específicos de CMPC
+    return CMPC_SPECIFIC_AUTHORS;
+  }
+
+  getTraditionalAuthors(): string[] {
+    // Retornar solo los autores tradicionales
+    return TRADITIONAL_AUTHORS;
+  }
+
+  getAuthorDescriptions() {
+    // Retornar autores con sus descripciones
+    return CMPC_AUTHOR_DESCRIPTIONS;
+  }
+
+  getPublishers(): string[] {
+    // Retornar todos los valores del enum de editoriales
+    return Object.values(Publisher);
   }
 
   async exportToCSV(): Promise<string> {

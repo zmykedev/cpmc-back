@@ -38,15 +38,10 @@ export class StorageService {
       this.isInitialized = true;
 
       this.logger.log('Google Cloud Storage initialized successfully');
-      console.log(
-        'StorageService: Google Cloud Storage initialized successfully',
-      );
+   
     } catch (error) {
       this.logger.error('Failed to initialize Google Cloud Storage:', error);
-      console.log(
-        'StorageService: Failed to initialize Google Cloud Storage:',
-        error,
-      );
+    
       this.isInitialized = false;
     }
   }
@@ -62,16 +57,13 @@ export class StorageService {
         throw new BadRequestException('Google Cloud Storage is not configured');
       }
 
-      console.log(`StorageService: Uploading file to GCP: ${filePath}`);
       const bucket = this.storage.bucket(this.bucketName);
       const result = await bucket.upload(filePath);
 
       this.logger.log(`File uploaded successfully: ${filePath}`);
-      console.log(`StorageService: File uploaded successfully: ${filePath}`);
       return result;
     } catch (error) {
       this.logger.error('Error uploading file to GCP:', error);
-      console.log('StorageService: Error uploading file to GCP:', error);
       throw new BadRequestException('Failed to upload file to GCP');
     }
   }

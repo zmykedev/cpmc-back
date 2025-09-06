@@ -23,15 +23,6 @@ async function bootstrap() {
   const enableCors = configService.get<boolean>('CORS');
   const port = configService.get<number>('PORT');
 
-  const gcsKeyFile = configService.get<string>('GCS_KEY_FILE');
-  const gcsProjectId = configService.get<string>('GCS_PROJECT_ID');
-  const gcsBucketName = configService.get<string>('GCS_BUCKET_NAME');
-
-  console.log('GCS_KEY_FILE', gcsKeyFile);
-
-  console.log('GCS_PROJECT_ID', gcsProjectId);
-  console.log('GCS_BUCKET_NAME', gcsBucketName);
-
   if (enableCors) {
     // OPCIÓN 1: Wildcard sin credentials (más permisivo)
     app.enableCors({
@@ -59,7 +50,6 @@ async function bootstrap() {
 
   setupSwagger(app);
 
-  console.log('PORT', port);
 
   await app.listen(Number(port));
 }
