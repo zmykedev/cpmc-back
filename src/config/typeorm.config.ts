@@ -3,7 +3,6 @@ import { config } from 'dotenv';
 
 config();
 
-
 export default new DataSource({
   type: 'postgres',
   host: process.env.DATABASE_HOST,

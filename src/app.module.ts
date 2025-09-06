@@ -6,6 +6,7 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { BooksModule } from './books/books.module';
 import { AuditLogModule } from './common/audit-log.module';
+import { StorageModule } from './storage/storage.module';
 import { getEnvFilePath } from './utils/config/envFile';
 import { ConfigModule, ConfigType } from '@nestjs/config';
 import { DevtoolsModule } from '@nestjs/devtools-integration';
@@ -44,6 +45,7 @@ import { AuditLogInterceptor } from './common/interceptors/audit-log.interceptor
     AuthModule,
     BooksModule,
     AuditLogModule,
+    StorageModule,
   ],
   controllers: [],
   providers: [

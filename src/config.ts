@@ -23,5 +23,10 @@ export default registerAs('config', () => {
       refreshTokenExpiration: process.env.REFRESH_TOKEN_EXPIRATION ?? '7d',
       accessTokenExpiration: process.env.ACCESS_TOKEN_EXPIRATION ?? '1h',
     },
+    gcs: {
+      projectId: process.env.GCS_PROJECT_ID,
+      bucketName: process.env.GCS_BUCKET_NAME,
+      keyFile: process.env.GCS_KEY_FILE,
+    },
   };
 });
