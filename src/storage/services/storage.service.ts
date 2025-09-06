@@ -21,11 +21,6 @@ export class StorageService {
       );
       const keyFile = this.configService.get<string>('config.gcs.keyFile');
 
-      // Debugging configuration values
-      console.log('StorageService: GCS projectId:', projectId);
-      console.log('StorageService: GCS bucketName:', bucketName);
-      console.log('StorageService: GCS keyFile:', keyFile);
-
       if (!projectId || !bucketName) {
         this.logger.warn(
           'Google Cloud Storage not configured. File uploads will be disabled.',
@@ -43,10 +38,15 @@ export class StorageService {
       this.isInitialized = true;
 
       this.logger.log('Google Cloud Storage initialized successfully');
-      console.log('StorageService: Google Cloud Storage initialized successfully');
+      console.log(
+        'StorageService: Google Cloud Storage initialized successfully',
+      );
     } catch (error) {
       this.logger.error('Failed to initialize Google Cloud Storage:', error);
-      console.log('StorageService: Failed to initialize Google Cloud Storage:', error);
+      console.log(
+        'StorageService: Failed to initialize Google Cloud Storage:',
+        error,
+      );
       this.isInitialized = false;
     }
   }

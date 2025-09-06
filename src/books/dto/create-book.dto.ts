@@ -59,7 +59,7 @@ export class CreateBookDto {
 
   @ApiPropertyOptional({ description: 'URL de la imagen del libro' })
   @IsOptional()
-  @IsUrl()
+  @IsString()
   @Length(0, 500)
   imageUrl?: string;
 

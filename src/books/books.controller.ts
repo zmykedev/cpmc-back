@@ -11,8 +11,8 @@ import {
   HttpStatus,
   UseInterceptors,
   UploadedFile,
-  Query,
   BadRequestException,
+  Query,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
@@ -23,6 +23,9 @@ import {
   ApiConsumes,
 } from '@nestjs/swagger';
 import { Response } from 'express';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os';
 import { BooksService } from './books.service';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
@@ -32,6 +35,13 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { StorageService } from '../storage/services/storage.service';
 
 import { Public } from '../auth/decorators/public.decorator';
+
+interface GcsUploadResult {
+  metadata: {
+    mediaLink?: string;
+    selfLink?: string;
+  };
+}
 
 @ApiTags('books')
 @Controller('books')
@@ -117,7 +127,12 @@ export class BooksController {
     description: 'Forbidden - Insufficient permissions',
   })
   searchBooks(@Body() searchDto: SearchBooksDto) {
-    return this.booksService.findAll(searchDto.query);
+    console.log('🔍 === SEARCH BOOKS CONTROLLER ===');
+    console.log('📝 Search DTO:', searchDto);
+    const result = this.booksService.findAll(searchDto.query);
+    console.log('📚 Search result preview:', result);
+    console.log('🔍 === FIN SEARCH BOOKS CONTROLLER ===');
+    return result;
   }
 
   @Get()
@@ -184,60 +199,141 @@ export class BooksController {
   @ApiConsumes('multipart/form-data')
   @ApiResponse({
     status: 201,
-    description: 'Image uploaded successfully',
+    description: 'Image uploaded and book updated successfully',
     schema: {
       type: 'object',
       properties: {
-        status: { type: 'string', example: 'success' },
+        status: { type: 'boolean', example: true },
         data: {
           type: 'object',
           properties: {
-            url: { type: 'string', example: 'https://storage.googleapis.com/bucket-name/images/uuid.jpg' },
+            success: { type: 'boolean', example: true },
+            message: {
+              type: 'string',
+              example: 'Image uploaded and book updated successfully',
+            },
             originalName: { type: 'string', example: 'book-cover.jpg' },
             size: { type: 'number', example: 1024000 },
             mimeType: { type: 'string', example: 'image/jpeg' },
           },
         },
-        message: { type: 'string', example: 'Image uploaded successfully' },
+        message: { type: 'string', example: 'Registro creado exitosamente' },
+        timestamp: { type: 'string', example: '2024-01-01T00:00:00.000Z' },
+        path: { type: 'string', example: '/api/v1/books/upload-image' },
+        method: { type: 'string', example: 'POST' },
+        statusCode: { type: 'number', example: 201 },
       },
     },
   })
-  @ApiResponse({ status: 400, description: 'Bad request - Invalid file or file too large' })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request - Invalid file or file too large',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Book not found' })
   @UseInterceptors(FileInterceptor('image'))
-  async uploadBookImage(@UploadedFile() file: Express.Multer.File) {
+  async uploadBookImage(
+    @UploadedFile() file: Express.Multer.File,
+    @Body('bookId') bookId: string,
+    @Body('id') id: string,
+    @Query('bookId') queryBookId: string,
+  ) {
+    console.log('🚀 === UPLOAD IMAGE ENDPOINT CALLED ===');
+    console.log(
+      '📁 File received:',
+      file
+        ? {
+            originalname: file.originalname,
+            size: file.size,
+            mimetype: file.mimetype,
+          }
+        : 'NO FILE',
+    );
+    console.log('📚 BookId from body:', bookId);
+    console.log('📚 ID from body:', id);
+    console.log('📚 BookId from query:', queryBookId);
+
+    // Try to get bookId from any of the possible sources
+    const finalBookId = bookId || id || queryBookId;
+    console.log('📚 Final BookId:', finalBookId);
+    console.log('📚 Final BookId type:', typeof finalBookId);
+    console.log(
+      '📚 Final BookId length:',
+      finalBookId ? finalBookId.length : 'null/undefined',
+    );
     if (!file) {
+      console.log('❌ No file provided');
       throw new BadRequestException('No file provided');
     }
 
-    // Save file temporarily and upload to GCS
-    const fs = require('fs');
-    const path = require('path');
-    const os = require('os');
-    
+    if (!finalBookId) {
+      console.log('❌ Book ID is required but received:', {
+        bookId,
+        id,
+        queryBookId,
+      });
+      throw new BadRequestException(
+        'Book ID is required. Send it as bookId, id in body, or bookId as query parameter',
+      );
+    }
+
     const tempDir = os.tmpdir();
     const tempFilePath = path.join(tempDir, file.originalname);
-    
+
     try {
       // Write file to temp location
       fs.writeFileSync(tempFilePath, file.buffer);
-      
+
       // Upload to GCS
-      const result = await this.storageService.uploadFileGcp(tempFilePath);
-      
+      const result = (await this.storageService.uploadFileGcp(
+        tempFilePath,
+      )) as GcsUploadResult[];
+
       // Clean up temp file
       fs.unlinkSync(tempFilePath);
-      
+
       // Extract URL from result
-      const url = result[0].metadata.mediaLink || result[0].metadata.selfLink;
-      
-      return {
-        url,
+      const imageUrl: string = result[0].metadata.mediaLink;
+      console.log('🔗 Image URL extracted:', imageUrl);
+
+      // Update book with image URL
+      console.log('📝 Updating book with ID:', finalBookId);
+      console.log('📝 Updating book with imageUrl:', imageUrl);
+      const updatedBook: Book = await this.booksService.update(finalBookId, {
+        imageUrl,
+      });
+      console.log('✅ Book updated successfully:', {
+        id: updatedBook.id,
+        title: updatedBook.title,
+        imageUrl: updatedBook.imageUrl,
+      });
+
+      const response = {
+        success: true,
+        message: 'Image uploaded and book updated successfully',
         originalName: file.originalname,
         size: file.size,
         mimeType: file.mimetype,
       };
+
+      console.log('📤 Returning response:', {
+        success: response.success,
+        message: response.message,
+        originalName: response.originalName,
+      });
+
+      return response;
     } catch (error) {
+      console.log('❌ Error in uploadBookImage:', error);
+      console.log(
+        '❌ Error message:',
+        (error as Error)?.message || 'Unknown error',
+      );
+      console.log(
+        '❌ Error stack:',
+        (error as Error)?.stack || 'No stack trace',
+      );
+
       // Clean up temp file if it exists
       if (fs.existsSync(tempFilePath)) {
         fs.unlinkSync(tempFilePath);

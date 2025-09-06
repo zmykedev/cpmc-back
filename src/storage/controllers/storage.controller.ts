@@ -24,7 +24,6 @@ import { ResponseInterceptor } from '../../common/interceptors/response.intercep
 export class StorageController {
   constructor(private readonly storageService: StorageService) {}
 
-
   @Post('upload-simple')
   @ApiOperation({ summary: 'Simple file upload to Google Cloud Storage' })
   @ApiResponse({

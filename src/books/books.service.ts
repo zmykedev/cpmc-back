@@ -91,6 +91,18 @@ export class BooksService {
       // Ejecutar consulta
       const [books, total] = await queryBuilder.getManyAndCount();
 
+      // Debug: Log all books to check if imageUrl is included
+      if (books.length > 0) {
+        console.log('📚 All books in search result:');
+        books.forEach((book, index) => {
+          console.log(`📖 Book ${index + 1}:`, {
+            id: book.id,
+            title: book.title,
+            imageUrl: book.imageUrl,
+          });
+        });
+      }
+
       const totalPages = Math.ceil(total / limit);
 
       return {
