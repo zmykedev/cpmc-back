@@ -45,7 +45,7 @@ lerna-debug.log*
 # temp directory
 .temp
 .tmp
-.json
+gcp-storage-strategy.json
 
 # Runtime data
 pids
